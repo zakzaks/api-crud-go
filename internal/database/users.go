@@ -24,14 +24,12 @@ func (m *UserModel) Insert(user *User) error {
 	return m.DB.QueryRowContext(ctx, query, user.Name, user.Email, user.Password).Scan(&user.Id)
 }
 
-func (m *UserModel) GetById(id int) (*User, error) {
+func (m *UserModel) getUser(query string, args ...interface{}) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT * FROM users WHERE id = ?`
-
 	var user User
-	err:= m.DB.QueryRowContext(ctx, query, id).Scan(&user.Id, &user.Name, &user.Email, &user.Password)
+	err:= m.DB.QueryRowContext(ctx, query, args...).Scan(&user.Id, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -40,4 +38,14 @@ func (m *UserModel) GetById(id int) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (m *UserModel) GetById(id int) (*User, error) {
+	query := `SELECT * FROM users WHERE id = ?`
+	return m.getUser(query, id)
+}
+
+func (m *UserModel) GetByEmail(email string) (*User, error) {
+	query := `SELECT * FROM users WHERE email = ?`
+	return m.getUser(query, email)
 }
