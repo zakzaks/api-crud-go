@@ -5,10 +5,20 @@ import (
 	"api-crud-go/internal/env"
 	"database/sql"
 	"log"
+	_ "api-crud-go/docs"
 
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// @title Go Gin REST API
+// @version 1.0
+// @description This is a sample server for a CRUD API built with Go and Gin framework.
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @desciption Enter your beare token in the format  **Bearer &lt;token&gt;**
+// @termsOfService http://swagger.io/terms/
 
 type application struct {
 	port int
