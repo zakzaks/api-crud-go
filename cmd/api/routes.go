@@ -14,6 +14,7 @@ func (app *application) routes() http.Handler {
 	v1 := g.Group("/api/v1")
 	{
 		v1.GET("/events", app.getAllEvents)
+		v1.GET("/events/paginated", app.getEventsPaginated)
 		v1.GET("/events/:id", app.getEvent)
 
 		v1.GET("/events/:id/attendees", app.getAttendeesForEvent)

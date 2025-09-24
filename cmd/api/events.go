@@ -50,6 +50,60 @@ func (app *application) getAllEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, events)
 }
 
+// getEventsPaginated returns events with pagination
+//
+// @Summary Get paginated events
+// @Description Retrieve a paginated list of events with 5 items per page
+// @Tags events
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number (default is 1)"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/v1/events/paginated [get]
+func (app *application) getEventsPaginated(c *gin.Context) {
+	// Get page parameter from query, default to 1 if not provided or invalid
+	pageStr := c.DefaultQuery("page", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	
+	// Set page size to 5 as per requirements
+	pageSize := 5
+	
+	// Get events for the current page
+	events, err := app.models.Events.GetPage(page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Get total count of events for pagination metadata
+	totalCount, err := app.models.Events.GetCount()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Calculate total pages
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	
+	// Create response with pagination metadata
+	response := gin.H{
+		"events": events,
+		"pagination": gin.H{
+			"current_page": page,
+			"page_size":    pageSize,
+			"total_count":  totalCount,
+			"total_pages":  totalPages,
+			"has_next":     page < totalPages,
+			"has_prev":     page > 1,
+		},
+	}
+	
+	c.JSON(http.StatusOK, response)
+}
+
 func (app *application) getEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 

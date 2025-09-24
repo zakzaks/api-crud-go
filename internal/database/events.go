@@ -75,6 +75,41 @@ func (m *EventModel) GetAll() ([]*Event, error){
 	return events, nil
 }
 
+// GetPage retrieves a specific page of events with pagination
+func (m *EventModel) GetPage(page int, pageSize int) ([]*Event, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Calculate offset based on page and pageSize
+	offset := (page - 1) * pageSize
+
+	query := `SELECT id, owner_id, name, description, date, location FROM events LIMIT ? OFFSET ?`
+
+	rows, err := m.DB.QueryContext(ctx, query, pageSize, offset)
+	if err != nil{
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	events := []*Event{}
+
+	for rows.Next(){
+		var event Event
+		err := rows.Scan(&event.Id, &event.OwnerId, &event.Name, &event.Description, &event.Date, &event.Location)
+		if err != nil{
+			return nil, err
+		}
+		events = append(events, &event)
+	}
+
+	if err = rows.Err(); err != nil{
+		return nil, err
+	}
+
+	return events, nil
+}
+
 func (m *EventModel) Get(id int) (*Event, error){
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -124,4 +159,20 @@ func (m *EventModel) Delete(id int) error{
 	}
 
 	return nil
+}
+
+// GetCount returns the total number of events
+func (m *EventModel) GetCount() (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	
+	query := `SELECT COUNT(*) FROM events`
+	
+	var count int
+	err := m.DB.QueryRowContext(ctx, query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	
+	return count, nil
 }
